@@ -2,7 +2,7 @@
 //
 // This source file is part of the APNSwift open source project
 //
-// Copyright (c) 2024 the APNSwift project authors
+// Copyright (c) 2022 the APNSwift project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,10 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// The storage policy for broadcast channel messages.
-public enum APNSBroadcastMessageStoragePolicy: Int, Codable, Sendable {
-    /// No messages are stored.
-    case noMessageStored = 0
-    /// Only the most recent message is stored.
-    case mostRecentMessageStored = 1
+public struct APNSBroadcastNotificationEvent: Hashable, Sendable {
+    /// The underlying raw value that is send to APNs.
+    let rawValue: String
+    
+    /// Specifies that live activity should be updated
+    public static let update = Self(rawValue: "update")
+
+    /// Specifies that live activity should be ended
+    public static let end = Self(rawValue: "end")
 }

@@ -26,8 +26,11 @@ import NIOPosix
 /// A client for managing Apple Push Notification broadcast channels.
 public final class APNSBroadcastClient<Decoder: APNSJSONDecoder & Sendable, Encoder: APNSJSONEncoder & Sendable>: APNSBroadcastClientProtocol {
 
-    /// The broadcast environment to use.
-    private let environment: APNSBroadcastEnvironment
+    /// The broadcast message environment to use.
+    private let broadcastMessageEnvironment: APNSBroadcastMessageEnvironment
+    
+    /// The broadcast channel management environment to use.
+    private let channelManagementEnvironment: APNSBroadcastChannelManagementEnvironment
 
     /// The app's bundle identifier used in the API path.
     private let bundleID: String
@@ -64,7 +67,8 @@ public final class APNSBroadcastClient<Decoder: APNSJSONDecoder & Sendable, Enco
     ///
     /// - Parameters:
     ///   - authenticationMethod: The authentication method to use.
-    ///   - environment: The broadcast environment (production or sandbox).
+    ///   - broadcastMessageEnvironment: The broadcast message environment (production or sandbox).
+    ///   - channelManagementEnvironment: The broadcast channel management environment (production or sandbox).
     ///   - bundleID: The app's bundle identifier (e.g., "com.example.myapp").
     ///   - eventLoopGroupProvider: Specify how EventLoopGroup will be created.
     ///   - responseDecoder: The decoder for the responses from APNs.
@@ -72,14 +76,16 @@ public final class APNSBroadcastClient<Decoder: APNSJSONDecoder & Sendable, Enco
     ///   - byteBufferAllocator: The `ByteBufferAllocator`.
     public init(
         authenticationMethod: APNSClientConfiguration.AuthenticationMethod,
-        environment: APNSBroadcastEnvironment,
+        broadcastMessageEnvironment: APNSBroadcastMessageEnvironment,
+        channelManagementEnvironment: APNSBroadcastChannelManagementEnvironment,
         bundleID: String,
         eventLoopGroupProvider: NIOEventLoopGroupProvider,
         responseDecoder: Decoder,
         requestEncoder: Encoder,
         byteBufferAllocator: ByteBufferAllocator = .init()
     ) {
-        self.environment = environment
+        self.broadcastMessageEnvironment = broadcastMessageEnvironment
+        self.channelManagementEnvironment = channelManagementEnvironment
         self.bundleID = bundleID
         self.byteBufferAllocator = byteBufferAllocator
         self.responseDecoder = responseDecoder
@@ -153,7 +159,7 @@ extension APNSBroadcastClient {
         }
         
         // Build the request URL
-        let requestURL = "\(self.environment.url):\(self.environment.port)/1/apps/\(self.bundleID)\(request.operation.path)"
+        let requestURL = requestURL(forRequest: request)
 
         // Create HTTP request
         var httpClientRequest = HTTPClientRequest(url: requestURL)
@@ -196,5 +202,14 @@ extension APNSBroadcastClient {
         )
 
         throw error
+        
+        func requestURL(forRequest request: APNSBroadcastRequest<Message>) -> String {
+            switch request.operation {
+            case .createChannel, .deleteChannel(_), .readChannel(_), .listAllChannels:
+                return "\(self.channelManagementEnvironment.url):\(self.channelManagementEnvironment.port)/1/apps/\(self.bundleID)\(request.operation.path)"
+            case .updateLiveActivityMessage, .endLiveActivityMessage:
+                return "\(self.broadcastMessageEnvironment.url):\(self.broadcastMessageEnvironment.port)/4/broadcasts/apps/\(self.bundleID)"
+            }
+        }
     }
 }

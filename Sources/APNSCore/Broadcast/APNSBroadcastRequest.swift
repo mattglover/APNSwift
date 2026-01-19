@@ -19,22 +19,25 @@ public struct APNSBroadcastRequest<Message: Encodable>: Sendable where Message: 
     /// The type of broadcast operation to perform.
     public enum Operation: Sendable {
         /// Create a new broadcast channel.
-        case create
+        case createChannel
         /// Read an existing broadcast channel.
-        case read(channelID: String)
+        case readChannel(channelID: String)
         /// Delete an existing broadcast channel.
-        case delete(channelID: String)
+        case deleteChannel(channelID: String)
         /// List all broadcast channels.
-        case listAll
+        case listAllChannels
+        
+        case updateLiveActivityMessage(channelID: String, topic: String, priority: String = "10", expiration: String = "0")
+        case endLiveActivityMessage(channelID: String, topic: String, priority: String = "10", expiration: String = "0")
 
         /// The HTTP method as a string.
         public var httpMethod: String {
             switch self {
-            case .create:
+            case .createChannel, .updateLiveActivityMessage, .endLiveActivityMessage:
                 return "POST"
-            case .read, .listAll:
+            case .readChannel, .listAllChannels:
                 return "GET"
-            case .delete:
+            case .deleteChannel:
                 return "DELETE"
             }
         }
@@ -42,16 +45,26 @@ public struct APNSBroadcastRequest<Message: Encodable>: Sendable where Message: 
         /// The path for this operation.
         public var path: String {
             switch self {
-            case .create, .delete, .read, .listAll:
+            case .createChannel, .deleteChannel, .readChannel, .listAllChannels:
                 return "/channels"
+            case .updateLiveActivityMessage, .endLiveActivityMessage:
+                return ""
             }
         }
         
         /// HTTP Headers for this operation.
         public var headers: [String: String]? {
             switch self {
-            case .delete(let channelID), .read(channelID: let channelID):
+            case .deleteChannel(let channelID), .readChannel(channelID: let channelID):
                 return ["apns-channel-id": channelID]
+            case  .updateLiveActivityMessage(let channelID, let topic, let priority, let expiration), .endLiveActivityMessage(let channelID, let topic, let priority, let expiration):
+                return [
+                    "apns-channel-id": channelID,
+                    "apns-push-type": "liveactivity",
+                    "apns-priority": priority,
+                    "apns-expiration": expiration,
+                    "apns-topic": topic
+                ]
             default:
                 return nil
             }

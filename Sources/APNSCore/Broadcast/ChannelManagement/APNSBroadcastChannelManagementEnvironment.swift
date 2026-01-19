@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// The APNs broadcast environment.
-public struct APNSBroadcastEnvironment: Sendable {
+public struct APNSBroadcastChannelManagementEnvironment: Sendable {
     /// The production APNs broadcast environment.
     public static let production = Self(url: "https://api-manage-broadcast.push.apple.com", port: 2196)
 

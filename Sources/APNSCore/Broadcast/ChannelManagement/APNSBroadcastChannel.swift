@@ -20,7 +20,7 @@ public struct APNSBroadcastChannel: Codable, Sendable {
     }
 
     /// The message storage policy for this channel.
-    public let messageStoragePolicy: APNSBroadcastMessageStoragePolicy
+    public let messageStoragePolicy: APNSBroadcastChannelStoragePolicy
 
     /// The push type for this broadcast channel.
     /// Currently only "LiveActivity" is supported for broadcast channels.
@@ -29,13 +29,13 @@ public struct APNSBroadcastChannel: Codable, Sendable {
     /// Creates a new broadcast channel configuration.
     ///
     /// - Parameter messageStoragePolicy: The storage policy for messages in this channel.
-    public init(messageStoragePolicy: APNSBroadcastMessageStoragePolicy) {
+    public init(messageStoragePolicy: APNSBroadcastChannelStoragePolicy) {
         self.messageStoragePolicy = messageStoragePolicy
         self.pushType = "LiveActivity"
     }
 
     /// Internal initializer used for decoding responses that include channel ID.
-    public init(messageStoragePolicy: APNSBroadcastMessageStoragePolicy, pushType: String = "LiveActivity") {
+    public init(messageStoragePolicy: APNSBroadcastChannelStoragePolicy, pushType: String = "LiveActivity") {
         self.messageStoragePolicy = messageStoragePolicy
         self.pushType = pushType
     }
